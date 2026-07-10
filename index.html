@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <title>电驴风云 · 南宁 — Scooter Rush: Nanning</title>
+  <meta name="description" content="护盾全开，礼貌超车。一款关于南宁电驴大军的赛车小游戏。">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛵</text></svg>">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="stage">
+    <canvas id="game" width="960" height="540"></canvas>
+    <div id="overlay"></div>
+    <div id="touch" hidden>
+      <button id="touch-left" aria-label="left">◀</button>
+      <button id="touch-gas" aria-label="gas">▲</button>
+      <button id="touch-horn" aria-label="horn">📢</button>
+      <button id="touch-right" aria-label="right">▶</button>
+    </div>
+  </div>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
