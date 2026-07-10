@@ -85,12 +85,15 @@ function renderSelect() {
       </div>
     </div>`).join('');
 
+  const inv = handlers.getInvincible();
   const node = el(`
     <div class="screen dim">
       ${chipsHTML()}
       <h2 class="screen-title">${t('ui.selectRider')}</h2>
       <div class="roster">${cards}</div>
       <div class="hint">${t('hint.shield')}</div>
+      <button class="btn-cheat ${inv ? 'on' : ''}" id="btn-inv">🛡️ ${t('ui.invincible')}：${inv ? t('ui.on') : t('ui.off')}</button>
+      <div class="hint" id="inv-desc" ${inv ? '' : 'hidden'}>${t('ui.invincibleDesc')}</div>
       <button class="btn secondary" id="btn-back">${t('ui.back')}</button>
     </div>`);
 
@@ -106,6 +109,14 @@ function renderSelect() {
       bar.style.background = c.color;
     });
     card.addEventListener('click', () => { audio.init(); handlers.onSelect(c); });
+  });
+  const invBtn = node.querySelector('#btn-inv');
+  invBtn.addEventListener('click', () => {
+    audio.init();
+    const on = handlers.onToggleInvincible();
+    invBtn.classList.toggle('on', on);
+    invBtn.textContent = `🛡️ ${t('ui.invincible')}：${on ? t('ui.on') : t('ui.off')}`;
+    node.querySelector('#inv-desc').hidden = !on;
   });
   node.querySelector('#btn-back').addEventListener('click', () => handlers.onHome());
   wireChips(node);
@@ -149,6 +160,7 @@ function renderResults(args) {
       <h2 class="screen-title">${t('ui.results')} 🎉</h2>
       <div class="rank-badge">${stats.rank}</div>
       <div class="rank-title">「${t('rank.' + stats.rank)}」</div>
+      ${stats.invincible ? `<div class="inv-tag">${t('ui.invincibleTag')}</div>` : ''}
       ${newBest ? `<div class="new-best">${t('ui.newBest')}</div>` : ''}
       <div class="result-grid">
         <div class="k">${t('ui.time')}</div><div class="v">${fmtTime(stats.time)}</div>

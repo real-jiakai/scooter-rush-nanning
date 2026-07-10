@@ -131,6 +131,33 @@ h1.game-title .en {
 
 .btn-row { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
 
+/* invincible-mode cheat toggle */
+.btn-cheat {
+  font-family: inherit;
+  font-size: clamp(12px, 2vmin, 15px);
+  font-weight: 800;
+  color: var(--ink-dim);
+  background: rgba(255,255,255,0.07);
+  border: 2px dashed rgba(255,255,255,0.28);
+  border-radius: 999px;
+  padding: 0.5em 1.7em;
+  cursor: pointer;
+  transition: all 160ms ease;
+}
+.btn-cheat:hover { color: var(--ink); border-color: rgba(255,255,255,0.5); }
+.btn-cheat.on {
+  color: #221803;
+  background: linear-gradient(180deg, #ffe08a, #ffb02e);
+  border: 2px solid #ffd23e;
+  box-shadow: 0 0 26px rgba(255, 210, 62, 0.45);
+}
+.inv-tag {
+  color: #ffd23e;
+  font-weight: 900;
+  font-size: clamp(13px, 2.4vmin, 17px);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+}
+
 /* small corner buttons (lang / mute) */
 .chip-row { position: absolute; top: 12px; right: 14px; display: flex; gap: 8px; }
 .chip {

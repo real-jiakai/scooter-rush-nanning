@@ -516,7 +516,7 @@ export function buildSprites() {
 /* ---------- the player (drawn live for lean/shield animation) ---------- */
 
 export function drawPlayer(ctx, cx, bottomY, pxW, char, opt) {
-  const { lean = 0, t = 0, shieldOn = true, shieldPct = 1, spin = 0, blink = false } = opt;
+  const { lean = 0, t = 0, shieldOn = true, shieldPct = 1, spin = 0, blink = false, golden = false } = opt;
   if (blink && Math.floor(t * 10) % 2 === 0) return;
 
   const scale = pxW / 96;
@@ -541,15 +541,19 @@ export function drawPlayer(ctx, cx, bottomY, pxW, char, opt) {
   const cy = bottomY - pxW * 0.62;
   if (shieldOn) {
     const a = 0.16 + 0.3 * shieldPct;
+    // invincible mode wears gold; the mortal shield is ice blue
+    const [c1, c2, rim] = golden
+      ? ['255, 200, 60', '255, 225, 120', '255, 224, 120']
+      : ['120, 220, 255', '160, 240, 255', '170, 240, 255'];
     const g = ctx.createRadialGradient(cx, cy, r * 0.55, cx, cy, r);
-    g.addColorStop(0, 'rgba(120, 220, 255, 0)');
-    g.addColorStop(0.82, `rgba(120, 220, 255, ${a * 0.35})`);
-    g.addColorStop(1, `rgba(160, 240, 255, ${a})`);
+    g.addColorStop(0, `rgba(${c1}, 0)`);
+    g.addColorStop(0.82, `rgba(${c1}, ${a * 0.35})`);
+    g.addColorStop(1, `rgba(${c2}, ${a})`);
     ctx.fillStyle = g;
     ctx.beginPath();
     ctx.ellipse(cx, cy, r, r * 0.92, 0, 0, 7);
     ctx.fill();
-    ctx.strokeStyle = `rgba(170, 240, 255, ${0.35 + 0.4 * shieldPct})`;
+    ctx.strokeStyle = `rgba(${rim}, ${0.35 + 0.4 * shieldPct})`;
     ctx.lineWidth = 2.5;
     ctx.beginPath();
     ctx.ellipse(cx, cy, r, r * 0.92, 0, 0, 7);

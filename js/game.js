@@ -219,6 +219,7 @@ let frameId = 0;
 
 export function createGame(char, sprites, hooks = {}) {
   const segments = TRACK_CACHE || (TRACK_CACHE = buildTrack(sprites));
+  const INV = !!hooks.invincible;   // cheat mode: shield never drains, never breaks
   const trackEnd = (TOTAL_SEGS + PAD_SEGS - DRAW_DIST - 5) * SEG_LEN;
   const finishZ = FINISH_SEG * SEG_LEN;
 
@@ -309,7 +310,7 @@ export function createGame(char, sprites, hooks = {}) {
     if (npc.type === 'bus') gained += 500;
     if (!g.demo) {
       g.score += gained;
-      g.energy = Math.max(0, g.energy - char.shield.cost * costMul);
+      if (!INV) g.energy = Math.max(0, g.energy - char.shield.cost * costMul);
     }
 
     const sx = npc.screen ? npc.screen.x : W / 2;
@@ -327,7 +328,7 @@ export function createGame(char, sprites, hooks = {}) {
       if (g.combo >= 2) fx.popupText('×' + g.combo, sx + 40, sy - 70, { color: '#ffd23e', size: 26, life: 0.8 });
     }
 
-    if (!g.demo && g.energy <= 0 && g.shieldOn) {
+    if (!g.demo && !INV && g.energy <= 0 && g.shieldOn) {
       g.shieldOn = false;
       fx.popupText(t('shield.down'), W / 2, H * 0.42, { color: '#ff8080', size: 24 });
     }
@@ -413,7 +414,7 @@ export function createGame(char, sprites, hooks = {}) {
       g.comboTimer -= dt;
       if (g.comboTimer <= 0) g.combo = 0;
     }
-    if (!g.demo) {
+    if (!g.demo && !INV) {
       if (g.time - g.lastPopAt > 0.6 && g.energy < char.shield.max) {
         g.energy = Math.min(char.shield.max, g.energy + char.shield.regen * dt);
       }
@@ -541,6 +542,7 @@ export function createGame(char, sprites, hooks = {}) {
       maxCombo: g.maxCombo,
       rank: rank(),
       charId: char.id,
+      invincible: INV,
     };
   }
 
@@ -811,6 +813,7 @@ export function createGame(char, sprites, hooks = {}) {
         shieldPct: g.energy / char.shield.max,
         spin: g.spinTimer > 0 ? 1 - g.spinTimer : 0,
         blink: g.invulnTimer > 0 && g.spinTimer <= 0,
+        golden: INV,
       });
     }
 
@@ -939,13 +942,22 @@ export function createGame(char, sprites, hooks = {}) {
     const sw = 140;
     ctx.fillStyle = 'rgba(255,255,255,0.18)';
     ctx.fillRect(46, H - 32, sw, 10);
-    const ep = g.energy / char.shield.max;
-    ctx.fillStyle = !g.shieldOn ? '#ff5d5d' : ep > 0.4 ? '#35d07f' : '#ffd23e';
-    ctx.fillRect(46, H - 32, sw * ep, 10);
-    if (!g.shieldOn && Math.floor(g.time * 4) % 2 === 0) {
-      ctx.font = 'bold 11px "Microsoft YaHei", sans-serif';
-      ctx.fillStyle = '#ff8080';
-      ctx.fillText(t('shield.down'), 46 + sw + 8, H - 26);
+    if (INV) {
+      const shimmer = 0.75 + 0.25 * Math.sin(g.time * 5);
+      ctx.fillStyle = `rgba(255, 210, 62, ${shimmer})`;
+      ctx.fillRect(46, H - 32, sw, 10);
+      ctx.font = 'bold 15px "Segoe UI", sans-serif';
+      ctx.fillStyle = '#ffd23e';
+      ctx.fillText('∞', 46 + sw + 8, H - 26);
+    } else {
+      const ep = g.energy / char.shield.max;
+      ctx.fillStyle = !g.shieldOn ? '#ff5d5d' : ep > 0.4 ? '#35d07f' : '#ffd23e';
+      ctx.fillRect(46, H - 32, sw * ep, 10);
+      if (!g.shieldOn && Math.floor(g.time * 4) % 2 === 0) {
+        ctx.font = 'bold 11px "Microsoft YaHei", sans-serif';
+        ctx.fillStyle = '#ff8080';
+        ctx.fillText(t('shield.down'), 46 + sw + 8, H - 26);
+      }
     }
   }
 

@@ -17,6 +17,7 @@ Polite overtaking, enforced by physics.
 - **4 riders** with different speed / handling / shield stats — the delivery knight, the market auntie, the office worker, and the perpetually-late student
 - **Shield pops** cost energy and build score combos — drain the shield and the next bump spins you out
 - **Horn (Space)**: politely ask traffic to move instead of popping them
+- **Invincible mode** toggle on the rider-select screen — golden infinite shield, no spin-outs (cheat runs don't count toward your best score)
 - Umbrella scooters, green 桂A taxis, No. 6 buses (popping one earns "BUS BOSS +500"), noodle stalls, and the 25 km/h speed-limit sign nobody obeys
 - Bilingual 中文 / English UI, synthesized audio (WebAudio, no assets), best-score persistence
 - **Zero dependencies** — plain HTML/CSS/JS with Canvas 2D, no build step
