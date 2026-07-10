@@ -2,6 +2,8 @@
 
 [English](README.md) | **简体中文**
 
+**▶ 在线试玩：[scooter-rush-nanning.pages.dev](https://scooter-rush-nanning.pages.dev/)**
+
 一款《暴力摩托》风格的伪 3D 赛车小游戏，主角是南宁传说中的电驴大军——但没有暴力。
 你的电驴自带保护罩：任何靠得太近的车辆和行人都会「砰」地一声变成彩纸，
 再坐着气球安全飘回家。礼貌超车，物理执行。

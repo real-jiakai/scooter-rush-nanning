@@ -4,10 +4,21 @@ const CONFETTI = ['#ffd23e', '#35d07f', '#ff6b6b', '#4dc3ff', '#cf95e8', '#ff9f1
 
 let items = [];
 
+// corner message feed (pop notifications) — newest at the bottom, stacked upward
+// in the lower-right corner so text never covers the action at the impact point
+let feed = [];
+const FEED_LIFE = 2.4;
+const FEED_MAX = 6;
+
 function rnd(a, b) { return a + Math.random() * (b - a); }
 
 export const fx = {
-  clear() { items = []; },
+  clear() { items = []; feed = []; },
+
+  feedText(text, color = '#ffffff') {
+    feed.push({ text, color, life: FEED_LIFE, max: FEED_LIFE });
+    if (feed.length > FEED_MAX) feed.splice(0, feed.length - FEED_MAX);
+  },
 
   // comedic non-violent explosion at screen (x, y); s scales with sprite distance
   spawnPop(x, y, s) {
@@ -127,6 +138,9 @@ export const fx = {
       }
     }
     items = items.filter(p => p.life > 0);
+
+    for (const f of feed) f.life -= dt;
+    feed = feed.filter(f => f.life > 0);
   },
 
   draw(ctx) {
@@ -210,6 +224,26 @@ export const fx = {
           break;
         }
       }
+    }
+    ctx.globalAlpha = 1;
+
+    /* corner feed */
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.font = 'bold 16px "Microsoft YaHei", "Noto Sans SC", sans-serif';
+    const n = feed.length;
+    for (let i = 0; i < n; i++) {
+      const f = feed[i];
+      const age = f.max - f.life;
+      const slide = Math.max(0, 1 - age / 0.18);     // slide in from the right edge
+      const y = 484 - (n - 1 - i) * 24;
+      const x = 940 + slide * 40;
+      ctx.globalAlpha = Math.min(1, f.life / 0.5);
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = 'rgba(10, 14, 20, 0.85)';
+      ctx.strokeText(f.text, x, y);
+      ctx.fillStyle = f.color;
+      ctx.fillText(f.text, x, y);
     }
     ctx.globalAlpha = 1;
   },

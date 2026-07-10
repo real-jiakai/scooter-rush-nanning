@@ -2,6 +2,8 @@
 
 **English** | [简体中文](README.zh-CN.md)
 
+**▶ Play online: [scooter-rush-nanning.pages.dev](https://scooter-rush-nanning.pages.dev/)**
+
 A Road Rash–style pseudo-3D racing game about Nanning's legendary electric-scooter
 army (电驴大军) — minus the violence. Your scooter has a protective shield: anything
 that gets too close pops in a shower of confetti and floats safely home on a balloon.

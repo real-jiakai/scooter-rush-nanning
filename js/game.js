@@ -316,16 +316,18 @@ export function createGame(char, sprites, hooks = {}) {
     const sx = npc.screen ? npc.screen.x : W / 2;
     const sy = npc.screen ? npc.screen.y : H * 0.7;
     const sc = npc.screen ? clamp(npc.screen.scale / (CAM_DEPTH / PLAYER_Z), 0.3, 1.4) : 1;
+    // confetti + balloon stay at the impact point; the TEXT goes to the corner
+    // feed so it never blocks the scenery
     fx.spawnPop(sx, sy, sc);
     fx.spawnBalloon(sx, sy - 10, sc);
     if (npc.type === 'bus') {
       audio.bigPop();
-      fx.popupText(t('pop.bus'), sx, sy - 46, { color: '#ffd23e', size: 26 });
+      fx.feedText(t('pop.bus'), '#ffd23e');
     } else {
       audio.pop(g.combo);
       const list = t('pops.list');
-      fx.popupText(list[(Math.random() * list.length) | 0], sx, sy - 40, { size: 20 });
-      if (g.combo >= 2) fx.popupText('×' + g.combo, sx + 40, sy - 70, { color: '#ffd23e', size: 26, life: 0.8 });
+      const msg = list[(Math.random() * list.length) | 0];
+      fx.feedText(g.combo >= 2 ? `${msg} ×${g.combo}` : msg);
     }
 
     if (!g.demo && !INV && g.energy <= 0 && g.shieldOn) {
