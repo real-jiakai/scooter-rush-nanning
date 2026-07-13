@@ -17,6 +17,7 @@ export const CHARACTERS = [
     accel: 5800,
     handling: 1.0,
     shield: { radius: 800, max: 100, cost: 20, regen: 10 },
+    partner: { zh: '女朋友', en: 'Girlfriend', color: '#ff9fb6' },
   },
   {
     id: 'ayi',
@@ -31,6 +32,7 @@ export const CHARACTERS = [
     accel: 4300,
     handling: 0.92,
     shield: { radius: 1180, max: 100, cost: 13, regen: 14 },
+    partner: { zh: '老伴', en: 'Hubby', color: '#8d6e63' },
   },
   {
     id: 'shangban',
@@ -45,6 +47,7 @@ export const CHARACTERS = [
     accel: 5000,
     handling: 1.06,
     shield: { radius: 960, max: 100, cost: 16, regen: 12 },
+    partner: { zh: '女朋友', en: 'Girlfriend', color: '#ffc2d1' },
   },
   {
     id: 'xuesheng',
@@ -59,6 +62,7 @@ export const CHARACTERS = [
     accel: 5400,
     handling: 1.16,
     shield: { radius: 880, max: 100, cost: 17, regen: 11 },
+    partner: { zh: '男朋友', en: 'Boyfriend', color: '#7fc8ff' },
   },
 ];
 

@@ -86,14 +86,19 @@ function renderSelect() {
     </div>`).join('');
 
   const inv = handlers.getInvincible();
+  const pas = handlers.getPassenger();
   const node = el(`
     <div class="screen dim">
       ${chipsHTML()}
       <h2 class="screen-title">${t('ui.selectRider')}</h2>
       <div class="roster">${cards}</div>
       <div class="hint">${t('hint.shield')}</div>
-      <button class="btn-cheat ${inv ? 'on' : ''}" id="btn-inv">🛡️ ${t('ui.invincible')}：${inv ? t('ui.on') : t('ui.off')}</button>
+      <div class="btn-row">
+        <button class="btn-cheat ${inv ? 'on' : ''}" id="btn-inv">🛡️ ${t('ui.invincible')}：${inv ? t('ui.on') : t('ui.off')}</button>
+        <button class="btn-cheat love ${pas ? 'on' : ''}" id="btn-pass">💑 ${t('ui.passenger')}：${pas ? t('ui.on') : t('ui.off')}</button>
+      </div>
       <div class="hint" id="inv-desc" ${inv ? '' : 'hidden'}>${t('ui.invincibleDesc')}</div>
+      <div class="hint" id="pass-desc" ${pas ? '' : 'hidden'}>${t('ui.passengerDesc')}</div>
       <button class="btn secondary" id="btn-back">${t('ui.back')}</button>
     </div>`);
 
@@ -117,6 +122,14 @@ function renderSelect() {
     invBtn.classList.toggle('on', on);
     invBtn.textContent = `🛡️ ${t('ui.invincible')}：${on ? t('ui.on') : t('ui.off')}`;
     node.querySelector('#inv-desc').hidden = !on;
+  });
+  const passBtn = node.querySelector('#btn-pass');
+  passBtn.addEventListener('click', () => {
+    audio.init();
+    const on = handlers.onTogglePassenger();
+    passBtn.classList.toggle('on', on);
+    passBtn.textContent = `💑 ${t('ui.passenger')}：${on ? t('ui.on') : t('ui.off')}`;
+    node.querySelector('#pass-desc').hidden = !on;
   });
   node.querySelector('#btn-back').addEventListener('click', () => handlers.onHome());
   wireChips(node);
@@ -167,6 +180,7 @@ function renderResults(args) {
         <div class="k">${t('ui.score')}</div><div class="v">${stats.score.toLocaleString()}</div>
         <div class="k">${t('ui.pops')}</div><div class="v">×${stats.pops}</div>
         <div class="k">${t('ui.maxCombo')}</div><div class="v">×${stats.maxCombo}</div>
+        ${stats.partner ? `<div class="k">${t('ui.partner')}</div><div class="v">${stats.partner === 'left' ? t('ui.partnerLeft') : t('ui.partnerStayed')}</div>` : ''}
       </div>
       <div class="btn-row">
         <button class="btn" id="btn-again">${t('ui.again')}</button>

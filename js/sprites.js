@@ -516,7 +516,10 @@ export function buildSprites() {
 /* ---------- the player (drawn live for lean/shield animation) ---------- */
 
 export function drawPlayer(ctx, cx, bottomY, pxW, char, opt) {
-  const { lean = 0, t = 0, shieldOn = true, shieldPct = 1, spin = 0, blink = false, golden = false } = opt;
+  const {
+    lean = 0, t = 0, shieldOn = true, shieldPct = 1, spin = 0, blink = false, golden = false,
+    passenger = false, partnerColor = '#ff9fb6', angerPct = 0, angerFlash = 0,
+  } = opt;
   if (blink && Math.floor(t * 10) % 2 === 0) return;
 
   const scale = pxW / 96;
@@ -534,6 +537,30 @@ export function drawPlayer(ctx, cx, bottomY, pxW, char, opt) {
   // trim stripe so the player pops against NPCs
   ctx.fillStyle = char.trim;
   ctx.fillRect(48 - 17, 136 - 40, 34, 5);
+
+  if (passenger) {
+    // pillion passenger sits nearest the camera in rear view: torso over the
+    // rider's lower back, arms wrapped around their waist
+    ctx.strokeStyle = partnerColor;
+    ctx.lineWidth = 6;
+    ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(37, 66); ctx.quadraticCurveTo(29, 76, 36, 84); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(59, 66); ctx.quadraticCurveTo(67, 76, 60, 84); ctx.stroke();
+    roundRect(ctx, 48 - 13, 62, 26, 26, 9, partnerColor);
+    // helmet peeking below the rider's
+    ctx.fillStyle = '#f7f7f7';
+    ctx.beginPath(); ctx.arc(48, 56, 10.5, 0, 7); ctx.fill();
+    ctx.fillStyle = partnerColor;
+    ctx.beginPath(); ctx.arc(48, 56, 10.5, Math.PI * 1.05, Math.PI * 1.95); ctx.fill();
+    // anger mark: flashes on a manhole hit, stays lit while fuming
+    if (angerFlash > 0 || angerPct > 0.7) {
+      const pulse = angerFlash > 0 ? 1 + angerFlash * 0.6 : 0.9 + 0.1 * Math.sin(t * 8);
+      ctx.font = `${Math.round(15 * pulse)}px "Segoe UI Emoji", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('💢', 66, 46);
+    }
+  }
   ctx.restore();
 
   // shield bubble

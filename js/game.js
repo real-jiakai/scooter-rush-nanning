@@ -2,7 +2,7 @@
 // project road segments with perspective, draw back-to-front, sprites clipped
 // against hill crests. World: road half-width = ROAD_W, segment = SEG_LEN.
 
-import { t } from './i18n.js';
+import { t, pick, getLang } from './i18n.js';
 import { audio } from './audio.js';
 import { fx } from './particles.js';
 import { drawPlayer } from './sprites.js';
@@ -37,6 +37,9 @@ function zoneAt(i) {
   for (const z of ZONES) if (i >= z.from && i < z.to) return z;
   return ZONES[ZONES.length - 1];
 }
+
+// segments with a full row of manholes across all lanes — unavoidable drama
+const MANHOLE_TRIPLES = new Set([340, 760, 1180, 1650, 1950, 3260, 3720, 4420]);
 
 function mulberry32(seed) {
   let a = seed >>> 0;
@@ -77,6 +80,7 @@ function buildTrack(sprites) {
       fog: 1,
       cross: false,
       checker: false,
+      manholes: null,
     });
   }
 
@@ -178,6 +182,15 @@ function buildTrack(sprites) {
       }
       if (i === FINISH_SEG) { addSprite(i, sprites.gantries.finish, 0); seg.checker = true; }
     }
+
+    // 井盖 — the true final boss of Nanning roads (none on the bridge deck)
+    if (z.key !== 'bridge' && i > 80 && i < FINISH_SEG - 40 && !seg.cross && !seg.checker) {
+      if (MANHOLE_TRIPLES.has(i)) {
+        seg.manholes = [-0.58, 0.02, 0.62];
+      } else if (i % 43 === 17) {
+        seg.manholes = [pickFrom([-0.6, -0.2, 0.2, 0.6]) + (rnd() * 0.08 - 0.04)];
+      }
+    }
   }
   for (let i = TOTAL_SEGS; i < TOTAL_SEGS + PAD_SEGS; i++) segs[i].zone = ZONES[ZONES.length - 1];
 
@@ -219,7 +232,8 @@ let frameId = 0;
 
 export function createGame(char, sprites, hooks = {}) {
   const segments = TRACK_CACHE || (TRACK_CACHE = buildTrack(sprites));
-  const INV = !!hooks.invincible;   // cheat mode: shield never drains, never breaks
+  const INV = !!hooks.invincible;      // cheat mode: shield never drains, never breaks
+  const PASSENGER = !!hooks.passenger; // your SO rides pillion: score ×1.5, manhole rage
   const trackEnd = (TOTAL_SEGS + PAD_SEGS - DRAW_DIST - 5) * SEG_LEN;
   const finishZ = FINISH_SEG * SEG_LEN;
 
@@ -243,6 +257,11 @@ export function createGame(char, sprites, hooks = {}) {
     shake: 0,
     hornCooldown: 0,
     finishedAt: 0,
+    anger: 0,
+    angerFlash: 0,
+    partnerLeft: false,
+    hopT: 0,
+    prevSegIdx: null,
     time: 0,                 // global running clock (for shader-ish anims)
     parallax: 0,
     zoneKey: 'chaoyang',
@@ -308,6 +327,7 @@ export function createGame(char, sprites, hooks = {}) {
     let gained = base * g.combo;
     let costMul = { ped: 0.5, scooter: 1, car: 1.3, taxi: 1.3, bus: 1.8 }[npc.type] || 1;
     if (npc.type === 'bus') gained += 500;
+    if (PASSENGER && !g.partnerLeft) gained = Math.round(gained * 1.5);   // date-night bonus
     if (!g.demo) {
       g.score += gained;
       if (!INV) g.energy = Math.max(0, g.energy - char.shield.cost * costMul);
@@ -330,9 +350,40 @@ export function createGame(char, sprites, hooks = {}) {
       fx.feedText(g.combo >= 2 ? `${msg} ×${g.combo}` : msg);
     }
 
+    dropShieldIfEmpty();
+  }
+
+  function dropShieldIfEmpty() {
     if (!g.demo && !INV && g.energy <= 0 && g.shieldOn) {
       g.shieldOn = false;
       fx.popupText(t('shield.down'), W / 2, H * 0.42, { color: '#ff8080', size: 24 });
+    }
+  }
+
+  function partnerLeaves() {
+    g.partnerLeft = true;
+    fx.spawnBalloon(W / 2, H - 150, 1.3);
+    fx.feedText(t('anger.left', { who: pick(char.partner) }), '#ff9fb6');
+    audio.partnerLeave();
+  }
+
+  function hitManhole() {
+    g.shake = Math.max(g.shake, 0.3);
+    g.hopT = 0.28;
+    audio.clank();
+    if (!INV) {
+      g.energy = Math.max(0, g.energy - 8);
+      dropShieldIfEmpty();
+    }
+    fx.feedText(t('manhole.hit'), '#c9ccd1');
+    if (PASSENGER && !g.partnerLeft) {
+      g.anger = Math.min(100, g.anger + 25);
+      g.angerFlash = 0.9;
+      audio.grumble();
+      const lines = t('anger.list');
+      const sep = getLang() === 'zh' ? '：' : ': ';
+      fx.feedText(pick(char.partner) + sep + lines[(Math.random() * lines.length) | 0], '#ff9fb6');
+      if (g.anger >= 100) partnerLeaves();
     }
   }
 
@@ -373,8 +424,13 @@ export function createGame(char, sprites, hooks = {}) {
       right = g.playerX < targetX - 0.05;
     }
 
+    // a back-seat passenger weighs the scooter down a little
+    const hasPassenger = PASSENGER && !g.partnerLeft;
+    const loadAccel = hasPassenger ? 0.92 : 1;
+    const loadTop = hasPassenger ? 0.96 : 1;
+
     if (racing || g.demo) {
-      if (gas && g.spinTimer <= 0) g.speed += char.accel * dt;
+      if (gas && g.spinTimer <= 0) g.speed += char.accel * loadAccel * dt;
       else if (brake) g.speed -= 9000 * dt;
       else g.speed -= 1600 * dt;
     } else if (g.state === 'finished') {
@@ -393,7 +449,7 @@ export function createGame(char, sprites, hooks = {}) {
       g.speed -= 7500 * dt;
       g.shake = Math.max(g.shake, 0.12);
     }
-    g.speed = clamp(g.speed, 0, char.topSpeed);
+    g.speed = clamp(g.speed, 0, char.topSpeed * loadTop);
 
     if (canSteer || g.demo) {
       const dx = dt * 2.0 * speedPct * char.handling;
@@ -410,6 +466,28 @@ export function createGame(char, sprites, hooks = {}) {
     g.parallax += playerSeg.curve * speedPct * dt * 24;
 
     if (racing) g.raceTime += dt;
+
+    /* --- manhole covers --- */
+    if (g.hopT > 0) g.hopT -= dt;
+    if (g.angerFlash > 0) g.angerFlash -= dt;
+    if (hasPassenger && g.anger > 0) g.anger = Math.max(0, g.anger - 3 * dt);
+
+    if (racing && !g.demo) {
+      // sweep every segment crossed since last frame so fast frames can't skip one
+      const curIdx = clamp(Math.floor((g.position + PLAYER_Z) / SEG_LEN), 0, segments.length - 1);
+      if (g.prevSegIdx === null || curIdx - g.prevSegIdx > 10 || curIdx < g.prevSegIdx) {
+        g.prevSegIdx = curIdx;   // fresh start / debug warp — don't replay the gap
+      } else {
+        for (let idx = g.prevSegIdx + 1; idx <= curIdx; idx++) {
+          const mh = segments[idx].manholes;
+          if (!mh) continue;
+          for (const o of mh) {
+            if (Math.abs(g.playerX - o) < 0.14) { hitManhole(); break; }
+          }
+        }
+        g.prevSegIdx = curIdx;
+      }
+    }
 
     /* --- combo & shield --- */
     if (g.comboTimer > 0) {
@@ -545,6 +623,7 @@ export function createGame(char, sprites, hooks = {}) {
       rank: rank(),
       charId: char.id,
       invincible: INV,
+      partner: PASSENGER ? (g.partnerLeft ? 'left' : 'stayed') : null,
     };
   }
 
@@ -715,6 +794,26 @@ export function createGame(char, sprites, hooks = {}) {
       }
     }
 
+    if (seg.manholes) {
+      const midY = (p1.y + p2.y) / 2;
+      const ry = Math.max(1.1, (p1.y - p2.y) * 0.36);
+      const rw = (p1.w + p2.w) / 2;
+      for (const o of seg.manholes) {
+        const rx = rw * 0.085;
+        if (rx < 1.5) continue;
+        const mx = (p1.x + p1.w * o + p2.x + p2.w * o) / 2;
+        ctx.fillStyle = '#33363b';
+        ctx.beginPath(); ctx.ellipse(mx, midY, rx, ry, 0, 0, 7); ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.ellipse(mx, midY, rx, ry, 0, 0, 7); ctx.stroke();
+        if (rx > 4) {
+          ctx.strokeStyle = 'rgba(255,255,255,0.14)';
+          ctx.beginPath(); ctx.ellipse(mx, midY, rx * 0.62, ry * 0.62, 0, 0, 7); ctx.stroke();
+        }
+      }
+    }
+
     const fogA = 1 - seg.fog;
     if (fogA > 0.02) {
       ctx.globalAlpha = fogA;
@@ -806,7 +905,8 @@ export function createGame(char, sprites, hooks = {}) {
     if (!opts.hidePlayer) {
       const pScale = CAM_DEPTH / PLAYER_Z;
       const pxW = pScale * 260 * (W / 2);
-      const bounce = Math.sin(g.time * 19) * speedPct * 1.6 + (Math.abs(g.playerX) > 1.02 ? Math.sin(g.time * 47) * speedPct * 2.4 : 0);
+      const hop = g.hopT > 0 ? -Math.sin(((0.28 - g.hopT) / 0.28) * Math.PI) * 7 : 0;
+      const bounce = Math.sin(g.time * 19) * speedPct * 1.6 + (Math.abs(g.playerX) > 1.02 ? Math.sin(g.time * 47) * speedPct * 2.4 : 0) + hop;
       const lean = (input0.right ? 1 : 0) - (input0.left ? 1 : 0);
       drawPlayer(ctx, W / 2, H - 26 + bounce, pxW, char, {
         lean: g.demo ? Math.sin(g.time * 0.35) * 0.5 : lean * speedPct,
@@ -816,6 +916,10 @@ export function createGame(char, sprites, hooks = {}) {
         spin: g.spinTimer > 0 ? 1 - g.spinTimer : 0,
         blink: g.invulnTimer > 0 && g.spinTimer <= 0,
         golden: INV,
+        passenger: PASSENGER && !g.partnerLeft,
+        partnerColor: char.partner.color,
+        angerPct: g.anger / 100,
+        angerFlash: g.angerFlash,
       });
     }
 
@@ -935,6 +1039,19 @@ export function createGame(char, sprites, hooks = {}) {
       ctx.font = 'bold 10px "Microsoft YaHei", sans-serif';
       ctx.fillStyle = '#9fb0bc';
       ctx.fillText(t('hud.limit'), signX, signY + 28);
+    }
+
+    // partner anger meter
+    if (PASSENGER && !g.partnerLeft) {
+      chip(ctx, 212, H - 48, 172, 34, 10);
+      ctx.font = '15px "Segoe UI", sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('💢', 222, H - 30);
+      ctx.fillStyle = 'rgba(255,255,255,0.18)';
+      ctx.fillRect(248, H - 36, 100, 10);
+      ctx.fillStyle = g.anger > 70 ? '#ff5d7a' : '#ff9fb6';
+      ctx.fillRect(248, H - 36, g.anger, 10);
+      ctx.fillText(g.anger < 40 ? '😊' : g.anger < 75 ? '😒' : '😡', 356, H - 30);
     }
 
     // shield bar

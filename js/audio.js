@@ -138,6 +138,24 @@ export const audio = {
     beep(600, 0.14, 'square', 0.16, 0.14);
   },
 
+  clank() {
+    // metallic manhole thunk
+    noise(0.06, 0.24, 0, 3400);
+    beep(170, 0.1, 'square', 0.22, 0, -70);
+    beep(95, 0.14, 'sawtooth', 0.16, 0.02, -30);
+  },
+
+  grumble() {
+    // an unimpressed passenger
+    beep(330, 0.09, 'square', 0.13);
+    beep(240, 0.13, 'square', 0.13, 0.1, -50);
+  },
+
+  partnerLeave() {
+    beep(640, 0.5, 'triangle', 0.18, 0, -420);
+    beep(220, 0.25, 'triangle', 0.12, 0.45, -80);
+  },
+
   hornBack(delay = 0) {
     // Distant NPC honk — quieter, random-ish pitch handled by caller varying delay.
     beep(500, 0.1, 'square', 0.05, delay);

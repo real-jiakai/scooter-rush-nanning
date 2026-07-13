@@ -35,6 +35,14 @@ function setInvincible(v) {
   try { localStorage.setItem('rush.invincible', v ? '1' : '0'); } catch { /* ignore */ }
 }
 
+let passenger = false;
+try { passenger = localStorage.getItem('rush.passenger') === '1'; } catch { /* ignore */ }
+
+function setPassenger(v) {
+  passenger = v;
+  try { localStorage.setItem('rush.passenger', v ? '1' : '0'); } catch { /* ignore */ }
+}
+
 /* ---------- persistence ---------- */
 
 function loadBest() {
@@ -67,6 +75,7 @@ function startRace(char) {
   fx.clear();
   raceGame = createGame(char, sprites, {
     invincible,
+    passenger,
     onZone: text => screens.toast(text),
     onFinish: stats => {
       // cheat runs never overwrite the legitimate record
@@ -95,6 +104,8 @@ screens.init(overlay, {
   onSelect: char => startRace(char),
   getInvincible: () => invincible,
   onToggleInvincible: () => { setInvincible(!invincible); return invincible; },
+  getPassenger: () => passenger,
+  onTogglePassenger: () => { setPassenger(!passenger); return passenger; },
   onResume: () => { state = 'race'; audio.engineStart(); screens.hide(); },
   onRestart: () => startRace(raceChar),
   onChangeRider: () => {

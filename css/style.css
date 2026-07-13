@@ -151,6 +151,12 @@ h1.game-title .en {
   border: 2px solid #ffd23e;
   box-shadow: 0 0 26px rgba(255, 210, 62, 0.45);
 }
+.btn-cheat.love.on {
+  color: #3a0d1c;
+  background: linear-gradient(180deg, #ffc2d1, #ff8fa9);
+  border: 2px solid #ff9fb6;
+  box-shadow: 0 0 26px rgba(255, 159, 182, 0.5);
+}
 .inv-tag {
   color: #ffd23e;
   font-weight: 900;
