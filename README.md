@@ -21,7 +21,7 @@ Polite overtaking, enforced by physics.
 - **Horn (Space)**: politely ask traffic to move instead of popping them
 - **Invincible mode** toggle on the rider-select screen — golden infinite shield, no spin-outs (cheat runs don't count toward your best score)
 - **Manhole covers**, the true final boss of Nanning roads: ride over one and the shield goes CLUNK
-- **💑 Bring-your-SO mode**: a back-seat passenger is worth ×1.5 score — but every manhole makes them *instantly* angry, and at max anger they balloon home mid-race. Inspired by a real girlfriend and real manhole covers.
+- **💑 Bring-your-SO mode**: a back-seat passenger is worth ×1.5 score — but every manhole makes them *instantly* angry, and at max anger they balloon home mid-race. They also have strong opinions about riding on the white lane lines. Inspired by a real girlfriend, real manhole covers, and real lane markings.
 - Umbrella scooters, green 桂A taxis, No. 6 buses (popping one earns "BUS BOSS +500"), noodle stalls, and the 25 km/h speed-limit sign nobody obeys
 - Bilingual 中文 / English UI, synthesized audio (WebAudio, no assets), best-score persistence
 - **Zero dependencies** — plain HTML/CSS/JS with Canvas 2D, no build step

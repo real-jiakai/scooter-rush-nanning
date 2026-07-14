@@ -262,6 +262,8 @@ export function createGame(char, sprites, hooks = {}) {
     partnerLeft: false,
     hopT: 0,
     prevSegIdx: null,
+    lineTime: 0,      // how long we've been riding a lane line
+    lineNag: 0,       // cooldown between complaints while still on it
     time: 0,                 // global running clock (for shader-ish anims)
     parallax: 0,
     zoneKey: 'chaoyang',
@@ -365,6 +367,16 @@ export function createGame(char, sprites, hooks = {}) {
     fx.spawnBalloon(W / 2, H - 150, 1.3);
     fx.feedText(t('anger.left', { who: pick(char.partner) }), '#ff9fb6');
     audio.partnerLeave();
+  }
+
+  function complainAboutLine() {
+    g.anger = Math.min(100, g.anger + 6);
+    g.angerFlash = 0.6;
+    audio.grumble();
+    const lines = t('line.list');
+    const sep = getLang() === 'zh' ? '：' : ': ';
+    fx.feedText(pick(char.partner) + sep + lines[(Math.random() * lines.length) | 0], '#ff9fb6');
+    if (g.anger >= 100) partnerLeaves();
   }
 
   function hitManhole() {
@@ -471,6 +483,29 @@ export function createGame(char, sprites, hooks = {}) {
     if (g.hopT > 0) g.hopT -= dt;
     if (g.angerFlash > 0) g.angerFlash -= dt;
     if (hasPassenger && g.anger > 0) g.anger = Math.max(0, g.anger - 3 * dt);
+
+    /* --- riding the white lane lines (a lesser but chronic offense) --- */
+    if (racing && !g.demo && hasPassenger) {
+      let onLine = false;
+      if (g.speed > char.topSpeed * 0.25 && Math.abs(g.playerX) <= 1) {
+        const lanes = playerSeg.zone ? playerSeg.zone.lanes : 3;
+        for (let i = 1; i < lanes; i++) {
+          if (Math.abs(g.playerX - (-1 + (2 * i) / lanes)) < 0.05) { onLine = true; break; }
+        }
+      }
+      if (onLine) {
+        g.lineTime += dt;
+        if (g.lineNag > 0) g.lineNag -= dt;
+        // a brief lane change is fine; RIDING the line is not
+        if (g.lineTime > 0.8 && g.lineNag <= 0) {
+          g.lineNag = 2.8;
+          complainAboutLine();
+        }
+      } else {
+        g.lineTime = 0;
+        g.lineNag = 0;
+      }
+    }
 
     if (racing && !g.demo) {
       // sweep every segment crossed since last frame so fast frames can't skip one
